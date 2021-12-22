@@ -1,26 +1,44 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { VFC, useEffect } from "react";
+import { useRecoilState } from "recoil";
 
-function App() {
+import { auth } from "./firebase";
+import styles from "./App.module.css";
+import { LoginUser } from "./store/LoginUser";
+import { initUser } from "./types/User";
+import Feed from "./components/Feed";
+import Auth from "./components/Auth";
+
+const App: VFC = () => {
+  const [loginUser, setLoginUser] = useRecoilState(LoginUser);
+
+  useEffect(() => {
+    const unSub = auth.onAuthStateChanged((authUser) => {
+      if (authUser) {
+        setLoginUser({
+          uid: authUser.uid,
+          photoUrl: authUser.photoURL,
+          displayName: authUser.displayName,
+        });
+      } else {
+        setLoginUser(initUser);
+      }
+    });
+    return () => {
+      unSub()
+    };
+  }, [setLoginUser]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      {loginUser.uid ? (
+        <div className={styles.app}>
+          <Feed />
+        </div>
+      ) : (
+        <Auth />
+      )}
+    </>
   );
-}
+};
 
 export default App;
