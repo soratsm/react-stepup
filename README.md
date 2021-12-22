@@ -1,39 +1,120 @@
-# Example app with [chakra-ui](https://github.com/chakra-ui/chakra-ui) and TypeScript
+# Firebaseとの連携
 
-This example features how to use [chakra-ui](https://github.com/chakra-ui/chakra-ui) as the component library within a Next.js app with TypeScript.
+## Firebaseの設定
 
-Next.js and chakra-ui have built-in TypeScript declarations, so we'll get autocompletion for their modules straight away.
+### プロジェクトの追加
 
-We are connecting the Next.js `_app.js` with `chakra-ui`'s Provider and theme so the pages can have app-wide dark/light mode. We are also creating some components which shows the usage of `chakra-ui`'s style props.
+- プロジェクト名設定
+- [続行]
+- アナリティクスは好みで有効にする
+- [プロジェクト作成]
+- プロジェクトの作成完了
 
-## Preview
+### プロジェクトの設定
 
-Preview the example live on [StackBlitz](http://stackblitz.com/):
+- [ウェブ</>]
+- アプリのニックネームの設定
+- [アプリの登録]
+- npmのインストール（すでに済なら飛ばす）
+- [コンソールに進む]
+- [プロジェクトの設定]
+- SDK の設定と構成
+- <*構成>
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/with-chakra-ui-typescript)
+### 連携ファイルの作成
 
-## Deploy your own
+※NEXTJSの場合は"REACT_APP"ではなく"NEXT_PUBLIC"にしないと駄目
+※V8とV9で記載方法が異なるので注意
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example):
+- 『.env.local』の作成
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/vercel/next.js/tree/canary/examples/with-chakra-ui-typescript&project-name=with-chakra-ui-typescript&repository-name=with-chakra-ui-typescript)
-
-## How to use
-
-### Using `create-next-app`
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init) or [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/) to bootstrap the example:
-
-```bash
-npx create-next-app --example with-chakra-ui-typescript with-chakra-ui-typescript-app
-# or
-yarn create next-app --example with-chakra-ui-typescript with-chakra-ui-typescript-app
+```code
+REACT_APP_FIREBASE_APIKEY="<*構成>"
+REACT_APP_FIREBASE_DOMAIN="<*構成>"
+REACT_APP_FIREBASE_DATABASE="https://<*構成.projectId>.firebaseio.com"
+REACT_APP_FIREBASE_PROJECT_ID="<*構成>"
+REACT_APP_FIREBASE_STORAGE_BUCKET="<*構成>"
+REACT_APP_FIREBASE_SENDER_ID="<*構成>"
+REACT_APP_FIREBASE_APP_ID="<*構成>"
 ```
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+- 『firebase.ts』
 
-## Notes
+```ts
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
-Chakra has supported Gradients and RTL in `v1.1`. To utilize RTL, [add RTL direction and swap](https://chakra-ui.com/docs/features/rtl-support).
+const firebaseApp = initializeApp({
+  apiKey: process.env.REACT_APP_FIREBASE_APIKEY,
+  authDomain: process.env.REACT_APP_FIREBASE_DOMAIN,
+  databaseURL: process.env.REACT_APP_FIREBASE_DATABASE,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+});
 
-If you don't have multi-direction app, you should make `<Html lang="ar" dir="rtl">` inside `_document.ts`.
+export const auth = getAuth(firebaseApp);
+export const db = getFirestore(firebaseApp);
+```
+
+### DBの作成
+
+- [Firestore Database]
+- [データベースの作成]
+- <*テストモードで開始>
+- [有効にする]
+- [コレクションを開始]
+  - コレクション:テーブル名
+  - ドキュメントID:レコードキー
+  - フィールド:カラム
+  - 値：バリュー
+- [ルール]
+  - 1か月間誰でもアクセスできる様になっているため下記のように書き換える
+
+```text
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if
+          request.time < timestamp.date(2022, 1, 16);
+    }
+  }
+}
+```
+
+### 認証
+
+- Firebaseの[uthentication]
+- [始める]
+- ログインプロバイダーを選択
+
+### ストレージ（アバター画像など）
+
+- Firebaseの[Storage]
+- [始める]
+- [完了]
+
+### CRUDと認証へのアクセス等々
+
+- ソース参照
+
+### Deploy
+
+- "npm run build"
+- Firebaseの[hosting]
+- [始める]
+- Firebase CLI のインストール（すでに済なら飛ばす）
+- プロジェクトの初期化
+  - Google へのログイン
+  - プロジェクトの開始
+    - "hosting"の上
+    - "Use an existing project"
+    - データベースの選択
+    - directory:"build"
+    - "Configure ... yes"
+    - "File ... no"
+- Firebase Hostingへのデプロイ
+  - urlが表示されるのでそこにアクセス
